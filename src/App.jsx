@@ -1,7 +1,53 @@
+import { useEffect, useState } from "react";
 import CoinLine from "./components/CoinLine";
-import cryptoData from "./crypto.json";
+import axios from "axios";
 
 const App = () => {
+  const [coinPrices, setCoinPrices] = useState([]);
+  const [coinList, setCoinList] = useState();
+
+  const getCoinMarket = async () => {
+    try {
+      const response = await axios.get("https://api.upbit.com/v1/market/all");
+      setCoinList(response.data);
+      console.log(response.data, "Hi");
+      console.log(response.data.length);
+      let coinapi = "https://api.upbit.com/v1/ticker?markets=KRW-BTC";
+
+      for (let i = 1; i < response.data.length; i++) {
+        if (response.data[i].market.substring(0, 3) === "KRW") {
+          coinapi = coinapi + "," + response.data[i].market;
+        }
+      }
+      console.log(coinapi);
+
+      getCoinPrices(coinapi);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const getCoinPrices = async (address) => {
+    try {
+      //console.log(`${address}`);
+      //console.log("https://api.upbit.com/v1/ticker?markets=KRW-BTC");
+      //console.log(typeof address);
+      // const response = await axios.get(
+      //   "https://api.upbit.com/v1/ticker?markets=KRW-BTC"
+      // );
+      const response = await axios.get(address);
+      console.log(response.data);
+      setCoinPrices(response.data);
+      // console.log(response.data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    getCoinMarket();
+  }, []);
+
   return (
     <div>
       <header className="border-b-[1px] flex justify-between text-3xl p-4">
@@ -119,7 +165,9 @@ const App = () => {
           </div>
         </div>
       </div>
-      <section className=" pt-3 ">
+
+      <div></div>
+      <section className=" py-3 px-12">
         <ul className="border-b-[1px] p-4 flex gap-4">
           <li>⚃가상자산</li>
           <li>≔카테고리</li>
@@ -128,10 +176,25 @@ const App = () => {
 
           <li>🔥Telegram Bot</li>
         </ul>
-        <div className="border-b-[1px]"># 이름 가격 </div>
+        <div className="border-b-[1px] flex px-3 py-1">
+          <div className="w-8">#</div>
+          <div className="w-48">이름</div>
+          <div className="w-40">가격(₩)</div>
+          <div className="w-40">변화</div>
+          <div className="w-36">변화율</div>
+          <div>거래량</div>
+        </div>
+
         <div>
-          {cryptoData.map((v, i) => {
-            return <CoinLine kye={i} name={v.name} price={v.price} h={v.h} />;
+          {coinPrices.map((v, i) => {
+            return (
+              <CoinLine
+                key={i}
+                coinPrices={v}
+                coinList={coinList[i]}
+                numb={i}
+              />
+            );
           })}
         </div>
       </section>
